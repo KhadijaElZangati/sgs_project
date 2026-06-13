@@ -44,13 +44,16 @@ const requirePermission = (requiredSlug) => {
       surveillant: [
         'students:read', 'students:manage',
       ],
-      employe: [
-        'hr:read_own', 'hr:create_request',
-        'students:read',
+      enseignant: [
+        'courses:read', 'courses:manage', 'exercises:read', 'profile:read',
+        'students:read', 'hr:read_own', 'hr:create_request',
+      ],
+      eleve: [
+        'courses:read', 'exercises:read', 'profile:read',
       ],
     };
 
-    const permissions = ROLE_PERMISSIONS[req.user.dbRole] || ROLE_PERMISSIONS.employe;
+    const permissions = ROLE_PERMISSIONS[req.user.dbRole] || ROLE_PERMISSIONS.enseignant;
     if (permissions.includes(requiredSlug) || req.user.dbRole === 'admin') {
       next();
     } else {

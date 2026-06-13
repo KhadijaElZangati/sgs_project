@@ -29,7 +29,7 @@ router.get('/profile', authenticate, async (req, res) => {
 
 router.put('/profile', authenticate, async (req, res) => {
   try {
-    const allowed = ['nom','prenom','email','telephone','adresse','date_naissance','lieu_naissance','cin','cnss','poste','matricule','diplome','specialite','sexe'];
+    const allowed = ['nom','prenom','email','telephone','adresse','date_naissance','lieu_naissance','cin','cnss','poste','matricule','diplome','specialite','sexe','subject'];
     const fields = [];
     const params = [];
     let idx = 1;
@@ -112,7 +112,7 @@ router.get('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const allowed = ['nom','prenom','email','role','actif','telephone','adresse','date_naissance','lieu_naissance','cin','cnss','poste','matricule','diplome','specialite','sexe'];
+    const allowed = ['nom','prenom','email','role','actif','telephone','adresse','date_naissance','lieu_naissance','cin','cnss','poste','matricule','diplome','specialite','sexe','subject'];
     const fields = [];
     const params = [];
     let idx = 1;

@@ -7,6 +7,7 @@ process.on('uncaughtException', function(err) {
 
 require('dotenv').config();
 const express = require('express');
+const http = require('http');
 const path = require('path');
 const cors = require('cors');
 
@@ -19,6 +20,14 @@ const schoolRoutes = require('./routes/school');
 const { resultatsRouter, certificatsRouter } = require('./routes/documents');
 const userRoutes = require('./routes/users');
 const notificationRoutes = require('./routes/notifications');
+const coursesRoutes = require('./routes/courses');
+const exercisesRoutes = require('./routes/exercises');
+const videosRoutes = require('./routes/videos');
+const progressRoutes = require('./routes/progress');
+const studentRoutes = require('./routes/student');
+const teacherRoutes = require('./routes/teacher');
+const commentsRoutes = require('./routes/comments');
+const { Server } = require('socket.io');
 
 const app = express();
 const port = 5000;
@@ -61,6 +70,13 @@ app.use('/api/certificats', certificatsRouter);
 app.use('/api/users', userRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/assistant', assistantRoutes);
+app.use('/api/courses', coursesRoutes);
+app.use('/api/exercises', exercisesRoutes);
+app.use('/api/videos', videosRoutes);
+app.use('/api/progress', progressRoutes);
+app.use('/api/student', studentRoutes);
+app.use('/api/teacher', teacherRoutes);
+app.use('/api/comments', commentsRoutes);
 
 app.post('/api/assistant/generate/attestation-travail', async (req, res) => {
   try {
@@ -109,6 +125,11 @@ app.post('/api/assistant/generate/certificat-scolaire', async (req, res) => {
   }
 });
 
-app.listen(port, () => {
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: { origin: 'http://localhost:5173', methods: ['GET', 'POST'] }
+});
+require('./socket')(io);
+server.listen(port, () => {
   console.log(`SGS Backend running on http://localhost:${port}`);
 });

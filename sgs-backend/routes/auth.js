@@ -26,26 +26,32 @@ const ROLE_PERMISSIONS = {
   surveillant: [
     'students:read', 'students:manage',
   ],
-  employe: [
-    'hr:read_own', 'hr:create_request',
-    'students:read',
+  enseignant: [
+    'courses:read', 'courses:manage', 'exercises:read', 'profile:read',
+    'students:read', 'hr:read_own', 'hr:create_request',
   ],
+  eleve: [
+    'courses:read', 'exercises:read', 'profile:read',
+  ],
+
 };
 
 const ROLE_MAP = {
   admin: 'administrateur',
   surveillant: 'surveillant_general',
+  enseignant: 'enseignant',
+  eleve: 'eleve',
   direction: 'direction',
   service_financier: 'service_financier',
-  employe: 'employe',
 };
 
 const ROLE_MAP_REVERSE = {
   administrateur: 'admin',
   surveillant_general: 'surveillant',
+  enseignant: 'enseignant',
+  eleve: 'eleve',
   direction: 'direction',
   service_financier: 'service_financier',
-  employe: 'employe',
 };
 
 router.post('/login', async (req, res) => {
@@ -60,7 +66,7 @@ router.post('/login', async (req, res) => {
     if (!valid) {
       return res.status(401).json({ message: 'Email ou mot de passe incorrect' });
     }
-    const dbRole = user.role || 'employe';
+    const dbRole = user.role || 'enseignant';
     const roleName = ROLE_MAP[dbRole] || dbRole;
     const permissions = ROLE_PERMISSIONS[dbRole] || ROLE_PERMISSIONS.employe;
     const token = jwt.sign(
@@ -70,7 +76,7 @@ router.post('/login', async (req, res) => {
     );
     res.json({
       token,
-      user: { id: user.id, nom: user.nom, prenom: user.prenom, email: user.email, role: roleName, permissions, photo: user.photo, telephone: user.telephone, poste: user.poste, matricule: user.matricule, initiales: user.initiales },
+      user: { id: user.id, nom: user.nom, prenom: user.prenom, email: user.email, role: roleName, dbRole, permissions, photo: user.photo, telephone: user.telephone, poste: user.poste, matricule: user.matricule, initiales: user.initiales, subject: user.subject },
     });
   } catch (err) {
     console.error("Login Error:", err);
@@ -78,21 +84,39 @@ router.post('/login', async (req, res) => {
   }
 });
 
+function normalizeEmail(str) {
+  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+}
+
 router.post('/signup', async (req, res) => {
-  const { nom, prenom, email, password, role } = req.body;
+  let { nom, prenom, email, password, role, subject, eleve_id } = req.body;
   try {
+    const dbRole = ROLE_MAP_REVERSE[role] || role || 'enseignant';
+    if (dbRole === 'eleve' && eleve_id && (!email || !password)) {
+      const student = await pool.query('SELECT nom, prenom, id_massar FROM eleves WHERE id = $1', [eleve_id]);
+      if (!student.rows.length) {
+        return res.status(400).json({ error: 'Élève introuvable' });
+      }
+      const s = student.rows[0];
+      nom = s.nom;
+      prenom = s.prenom;
+      email = normalizeEmail(s.prenom) + normalizeEmail(s.nom) + '@borjazzaitoune.ma';
+      password = s.id_massar;
+    }
     if (!nom || !email || !password) {
       return res.status(400).json({ error: 'Champs requis manquants' });
     }
     const initiales = ((prenom || '')[0] || '') + ((nom || '')[0] || '');
-    const dbRole = ROLE_MAP_REVERSE[role] || role || 'employe';
     const hashedPassword = await bcrypt.hash(password, 10);
     const result = await pool.query(
-      `INSERT INTO users (nom, prenom, email, password, role, initiales, actif)
-       VALUES ($1, $2, $3, $4, $5, $6, true) RETURNING *`,
-      [nom, prenom || '', email, hashedPassword, dbRole, initiales.toUpperCase()]
+      `INSERT INTO users (nom, prenom, email, password, role, initiales, actif, subject)
+       VALUES ($1, $2, $3, $4, $5, $6, true, $7) RETURNING *`,
+      [nom, prenom || '', email, hashedPassword, dbRole, initiales.toUpperCase(), subject || '']
     );
-    res.json(result.rows[0]);
+    if (dbRole === 'eleve' && eleve_id) {
+      await pool.query('UPDATE eleves SET user_id = $1 WHERE id = $2', [result.rows[0].id, eleve_id]);
+    }
+    res.json({ ...result.rows[0], generatedEmail: email, generatedPassword: password });
   } catch (err) {
     if (err.code === '23505') {
       res.status(400).json({ error: 'Cet email existe déjà' });

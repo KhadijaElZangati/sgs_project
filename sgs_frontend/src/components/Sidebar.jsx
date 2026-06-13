@@ -1,8 +1,8 @@
 import { useTranslation } from "react-i18next";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Users, DollarSign, BookOpen, FileText, Settings, Bot,
-  ChevronRight, X, ClipboardCheck,
+  ChevronRight, X, ClipboardCheck, GraduationCap, BookMarked, MessageCircle,
 } from "lucide-react";
 
 function useNavSections() {
@@ -22,6 +22,9 @@ function useNavSections() {
         { label: t('sidebar.school'), path: "/school-life", icon: BookOpen, permission: ["students:read", "students:manage"], excludeAdmin: true },
         { label: t('sidebar.documents'), path: "/documents", icon: FileText, permission: ["certificates:generate", "grades:manage"] },
         { label: t('sidebar.presence'), path: "/school-life/presence", icon: ClipboardCheck, permission: ["students:read"], employeeOnly: true },
+        { label: t('sidebar.teacher'), path: "/teacher", icon: GraduationCap, permission: ["courses:read"], teacherOnly: true },
+        { label: t('sidebar.student'), path: "/student", icon: BookMarked, permission: null, studentOnly: true },
+        { label: t('sidebar.messages'), path: "#chat", icon: MessageCircle, permission: null, clickHandler: true },
         { label: t('sidebar.assistantIA'), path: "/assistant", icon: Bot, permission: null, adminDirectionOnly: true },
       ],
     },
@@ -35,6 +38,7 @@ function useNavSections() {
 }
 
 export default function Sidebar({ isOpen, onToggle, user, hasPermission }) {
+  const navigate = useNavigate();
   const navSections = useNavSections();
   const location = useLocation();
 
@@ -51,7 +55,9 @@ export default function Sidebar({ isOpen, onToggle, user, hasPermission }) {
 
   const isItemVisible = (item) => {
     if (item.adminOnly) return user?.role === "administrateur";
-    if (item.employeeOnly) return user?.role === "employe";
+    if (item.employeeOnly) return user?.role === "enseignant";
+    if (item.teacherOnly) return user?.role === "enseignant";
+    if (item.studentOnly) return user?.role === "eleve";
     if (item.excludeAdmin && user?.role === "administrateur") return false;
     if (item.adminDirectionOnly) return user?.role === "administrateur" || user?.role === "direction";
     if (item.permission) return hasPermission(item.permission);
@@ -112,7 +118,10 @@ export default function Sidebar({ isOpen, onToggle, user, hasPermission }) {
                     <Link
                       key={item.path}
                       to={item.path}
-                      onClick={() => { if (window.innerWidth < 1024) onToggle(); }}
+                      onClick={() => {
+                        if (item.clickHandler) { if (window.innerWidth < 1024) onToggle(); window.dispatchEvent(new CustomEvent('open-chat')); return; }
+                        if (window.innerWidth < 1024) onToggle();
+                      }}
                       className={`group flex items-center justify-between px-3 py-3 rounded-xl transition-all duration-200 ${
                         active
                           ? "bg-blue-600 text-white shadow-md shadow-blue-600/10"

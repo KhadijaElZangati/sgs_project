@@ -540,6 +540,18 @@ function SurveillantDashboard({ user, api, navigate }) {
   );
 }
 
+function TeacherDashboard({ user, api, navigate }) {
+  const { t } = useTranslation();
+  useEffect(() => { navigate("/teacher"); }, []);
+  return <LoadingPage />;
+}
+
+function StudentDashboard({ user, api, navigate }) {
+  const { t } = useTranslation();
+  useEffect(() => { navigate("/student"); }, []);
+  return <LoadingPage />;
+}
+
 export default function Dashboard({ user, api, hasPermission }) {
   const navigate = useNavigate();
   const role = user?.role;
@@ -547,5 +559,7 @@ export default function Dashboard({ user, api, hasPermission }) {
   if (role === "direction") return <DirectionDashboard user={user} api={api} navigate={navigate} />;
   if (role === "service_financier") return <FinanceDashboard user={user} api={api} navigate={navigate} />;
   if (role === "surveillant_general") return <SurveillantDashboard user={user} api={api} navigate={navigate} />;
+  if (role === "enseignant") return <TeacherDashboard user={user} api={api} navigate={navigate} />;
+  if (role === "eleve") return <StudentDashboard user={user} api={api} navigate={navigate} />;
   return <EmployeeDashboard user={user} api={api} navigate={navigate} />;
 }

@@ -8,13 +8,14 @@ import { pushToast } from "../../components/Notifications";
 const ROLES = [
   { value: "administrateur", labelKey: "users.admin", color: "bg-purple-100 text-purple-800" },
   { value: "direction", labelKey: "users.direction", color: "bg-emerald-100 text-emerald-800" },
-  { value: "employe", labelKey: "users.employee", color: "bg-blue-100 text-blue-800" },
+  { value: "enseignant", labelKey: "users.teacher", color: "bg-blue-100 text-blue-800" },
+  { value: "eleve", labelKey: "users.eleve", color: "bg-green-100 text-green-800" },
   { value: "service_financier", labelKey: "users.finance", color: "bg-cyan-100 text-cyan-800" },
   { value: "surveillant_general", labelKey: "users.supervisor", color: "bg-amber-100 text-amber-800" },
 ];
 
 const ROLE_MAP = Object.fromEntries(ROLES.map(r => [r.value, r]));
-const INITIAL_FORM = { nom: "", prenom: "", email: "", password: "", role: "employe", actif: true };
+const INITIAL_FORM = { nom: "", prenom: "", email: "", password: "", role: "enseignant", actif: true };
 
 export default function UserManagement({ api }) {
   const { t } = useTranslation();

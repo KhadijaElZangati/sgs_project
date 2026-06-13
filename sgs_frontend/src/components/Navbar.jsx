@@ -2,10 +2,10 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import i18n from "i18next";
-import { LogOut, User, Bell, Search, X, Menu, CheckCheck } from "lucide-react";
+import { LogOut, User, Bell, Search, X, Menu, CheckCheck, MessageCircle } from "lucide-react";
 import LanguageSwitcher from "./LanguageSwitcher";
 
-export default function Navbar({ user, api, onLogout, notifications, unreadCount: initialUnread = 0, onSearchToggle, onMenuToggle, onNotificationsUpdate }) {
+export default function Navbar({ user, api, onLogout, notifications, unreadCount: initialUnread = 0, onSearchToggle, onMenuToggle, onNotificationsUpdate, onChatToggle }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -103,6 +103,10 @@ export default function Navbar({ user, api, onLogout, notifications, unreadCount
           </div>
 
           <LanguageSwitcher />
+
+          <button onClick={onChatToggle} className="relative p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title={t('chat.title')}>
+            <MessageCircle size={20} />
+          </button>
 
           <div className="relative" ref={notifRef}>
             <button onClick={() => setShowNotif(!showNotif)} className="relative p-2 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all" title={t('nav.notifications')}>

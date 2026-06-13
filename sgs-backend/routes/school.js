@@ -595,8 +595,8 @@ router.post('/seances', authenticate, async (req, res) => {
 
 router.get('/seances', authenticate, async (req, res) => {
   try {
-    const where = req.user.role === 'employe' ? 'WHERE s.enseignant_id = $1' : '';
-    const params = req.user.role === 'employe' ? [req.user.id] : [];
+    const where = req.user.role === 'enseignant' ? 'WHERE s.enseignant_id = $1' : '';
+    const params = req.user.role === 'enseignant' ? [req.user.id] : [];
     const result = await pool.query(
       `SELECT s.*, u.prenom||' '||u.nom AS enseignant_nom
        FROM seances s
@@ -701,6 +701,40 @@ router.patch('/absences/records/:id/justify', authenticate, async (req, res) => 
     try { await checkAlertThreshold(eleve_id); } catch (_) {}
 
     res.json(rec.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- Search students by name/massar ---
+router.get('/search', async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q || q.length < 2) return res.json([]);
+    const result = await pool.query(
+      `SELECT id, id_massar, nom, prenom, niveau, classe, user_id
+       FROM eleves
+       WHERE nom ILIKE $1 OR prenom ILIKE $1 OR id_massar ILIKE $1
+       ORDER BY nom ASC LIMIT 20`,
+      [`%${q}%`]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- Link a student to a user account ---
+router.put('/:id/link-user', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { user_id } = req.body;
+    const result = await pool.query(
+      'UPDATE eleves SET user_id = $1 WHERE id = $2 RETURNING *',
+      [user_id, id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Élève non trouvé' });
+    res.json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

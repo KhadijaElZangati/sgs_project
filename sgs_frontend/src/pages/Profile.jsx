@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { User, Camera, Save, Loader2, Mail, Phone, MapPin, Calendar, Briefcase, GraduationCap, IdCard, FileText, Globe, Lock, Eye, EyeOff } from "lucide-react";
+import { User, Camera, Save, Loader2, Mail, Phone, MapPin, Calendar, Briefcase, GraduationCap, IdCard, FileText, Globe, Lock, Eye, EyeOff, BookOpen } from "lucide-react";
 import { pushToast } from "../components/Notifications";
 
 export default function Profile({ api, user, setUser }) {
@@ -82,6 +82,7 @@ export default function Profile({ api, user, setUser }) {
     </div>
   );
 
+  const isTeacher = profile?.role === 'enseignant' || (profile?.role && profile.role !== 'eleve' && profile.role !== 'administrateur');
   const photoUrl = profile?.photo ? `http://localhost:5000${profile.photo}` : null;
 
   return (
@@ -150,6 +151,9 @@ export default function Profile({ api, user, setUser }) {
                 <Input label={t('profile.dateEmbauche')} icon={Calendar} field="date_embauche" type="date" />
               </div>
               <Input label={t('profile.soldeConge')} icon={Calendar} field="solde_conge" type="number" />
+              {profile?.role === 'enseignant' && (
+                <Input label={t('users.subject')} icon={BookOpen} field="subject" />
+              )}
             </div>
           </div>
         </div>
